@@ -1,17 +1,80 @@
-## Scalable Lock Implementations: Evaluating GPU Concurrency Performance
+# GPU Lock Benchmarking
 
-# Check slides for Project motivation and pseudocode for different locks (spin, ticket, spinspin, anderson, mcs)
-# We experiment with 5 different types of locks (code in the respective .h files)
+Evaluates the performance and correctness of GPU locking mechanisms under concurrency stress. See: https://johnwickerson.github.io/papers/gpuconcurrency.pdf
 
-## To compile and run different executables do the following:
-# to compile, run:
-# nvcc -o [filename] [filename].cu 
-# replace [filename] with the filname of .cu file we are trying to compile
+## Overview
 
-# To execute the .cu file, run:
-# ./[filename]
-# output includes each lock type, number of blocks counted (correctness), and time it took for program to run (performance)
+We implement five different types of GPU locks and run them across two benchmark modes:
+- **Low complexity**: small critical sections
+- **High complexity**: large critical sections
 
-# basicAtomicAddition.cu has the code for a simple atomic addition (no race-condition)
-# lowComplexityCritical.cu has the locks ran on the small critical sections
-# highComplecityCritical.cu has the locks ran on the high critical sections
+Each test is executed 100,000 times on multiple GPU architectures (pre- and post-2016) to measure:
+- **Correctness**: whether blocks are accurately counted
+- **Performance**: execution time under contention
+
+## Lock Types
+
+The following lock types are implemented:
+- `spinlock.h`
+- `ticketlock.h`
+- `andersonlock.h`
+- `mcslock.h`
+- `spinspinlock.h`
+
+## Files
+
+| File                        | Description |
+|----------------------------|-------------|
+| `basicAtomicAddition.cu`   | Baseline using atomic addition (no locks) |
+| `lowComplexityCritical.cu` | Runs all locks on small critical sections |
+| `highComplexityCritical.cu`| Runs all locks on large critical sections |
+| `*.h` files                | Lock implementations |
+| `Scalable Lock...pdf`      | Reference paper |
+| `README.md`                | Project documentation |
+
+## Compile Instructions
+
+To compile any `.cu` file:
+```bash
+nvcc -o [filename] [filename].cu
+```
+Replace `[filename]` with the name of the file, e.g.:
+```bash
+nvcc -o lowComplexityCritical lowComplexityCritical.cu
+```
+
+## Run Instructions
+
+To execute the compiled file:
+```bash
+./[filename]
+```
+
+Example:
+```bash
+./lowComplexityCritical
+```
+
+## Output
+
+Each run prints:
+- Lock type used
+- Number of blocks counted (correctness)
+- Time taken (performance)
+
+## Motivation
+
+- Quantify weak behaviors in older vs. newer GPU architectures
+- Compare lock performance and fairness under high contention
+- Analyze whether newer GPUs show fewer deviations under lock stress
+
+## Key Findings (Expected)
+
+- Newer GPUs should reduce weak behaviors
+- Spin locks may show worse performance due to lack of fairness
+- Ticket locks may reduce deviations under high load
+
+## Authors
+
+- Arnav Gattani  
+- Akash Anickode  
